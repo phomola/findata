@@ -9,12 +9,11 @@ import (
 
 type (
 	quote struct {
-		Volume        []float64 `json:"volume"`
-		Open          []float64 `json:"open"`
-		Close         []float64 `json:"close"`
-		Low           []float64 `json:"low"`
-		High          []float64 `json:"high"`
-		AdjustedClose []float64 `json:"adjclose"`
+		Volume []float64 `json:"volume"`
+		Open   []float64 `json:"open"`
+		Close  []float64 `json:"close"`
+		Low    []float64 `json:"low"`
+		High   []float64 `json:"high"`
 	}
 
 	indicators struct {
@@ -49,13 +48,13 @@ type (
 
 	// Candle contains candle data.
 	Candle struct {
-		Timestamp     time.Time
-		Volume        float64
-		Open          float64
-		Close         float64
-		Low           float64
-		High          float64
-		AdjustedClose float64
+		Timestamp time.Time
+		Volume    float64
+		Open      float64
+		Close     float64
+		Low       float64
+		High      float64
+		// AdjustedClose float64
 	}
 )
 
@@ -102,7 +101,6 @@ func Fetch(symbol string, from, to time.Time, interval Interval) ([]Candle, *Met
 	close := r.Chart.Results[0].Indicators.Quotes[0].Close
 	low := r.Chart.Results[0].Indicators.Quotes[0].Low
 	high := r.Chart.Results[0].Indicators.Quotes[0].High
-	adjclose := r.Chart.Results[0].Indicators.Quotes[0].AdjustedClose
 	meta := r.Chart.Results[0].Meta
 	loc, err := time.LoadLocation(meta.ExchangeTimezoneName)
 	if err != nil {
@@ -111,13 +109,13 @@ func Fetch(symbol string, from, to time.Time, interval Interval) ([]Candle, *Met
 	candles := make([]Candle, 0, len(timestamps))
 	for i, t := range timestamps {
 		candles = append(candles, Candle{
-			Timestamp:     time.Unix(t, 0).In(loc),
-			Volume:        volume[i],
-			Open:          open[i],
-			Close:         close[i],
-			Low:           low[i],
-			High:          high[i],
-			AdjustedClose: adjclose[i],
+			Timestamp: time.Unix(t, 0).In(loc),
+			Volume:    volume[i],
+			Open:      open[i],
+			Close:     close[i],
+			Low:       low[i],
+			High:      high[i],
+			// AdjustedClose: adjclose[i],
 		})
 	}
 	return candles, &meta, nil
