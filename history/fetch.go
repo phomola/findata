@@ -74,8 +74,17 @@ func (i Interval) String() string {
 	return ""
 }
 
+// NotFoundError represents a not-found error, e.g., non-existent symbol.
+type NotFoundError struct {
+	Symbol string
+}
+
+func (e *NotFoundError) Error() string {
+	return fmt.Sprintf("not found (%s)", e.Symbol)
+}
+
 // Fetch fetches financial data.
-func Fetch(symbol string, from, to time.Time, interval Interval) ([]Candle, *Meta, error) {
+func Fetch(symbol string, from, to time.Time, interval Interval) ([]*Candle, *Meta, error) {
 	url := fmt.Sprintf("https://query1.finance.yahoo.com/v8/finance/chart/%s?period1=%d&period2=%d&interval=%s", symbol, from.Unix(), to.Unix(), interval)
 	cl := http.Client{Timeout: 5 * time.Second}
 	req, err := http.NewRequest(http.MethodGet, url, nil)
@@ -88,6 +97,9 @@ func Fetch(symbol string, from, to time.Time, interval Interval) ([]Candle, *Met
 		return nil, nil, err
 	}
 	defer resp.Body.Close()
+	if resp.StatusCode == http.StatusNotFound {
+		return nil, nil, &NotFoundError{Symbol: symbol}
+	}
 	if resp.StatusCode != http.StatusOK {
 		return nil, nil, fmt.Errorf("unexpected error code: %s", resp.Status)
 	}
@@ -106,9 +118,9 @@ func Fetch(symbol string, from, to time.Time, interval Interval) ([]Candle, *Met
 	if err != nil {
 		return nil, nil, err
 	}
-	candles := make([]Candle, 0, len(timestamps))
+	candles := make([]*Candle, 0, len(timestamps))
 	for i, t := range timestamps {
-		candles = append(candles, Candle{
+		candles = append(candles, &Candle{
 			Timestamp: time.Unix(t, 0).In(loc),
 			Volume:    volume[i],
 			Open:      open[i],
